@@ -1,0 +1,94 @@
+---
+title: "Assignment 1"
+author: "Shale"
+date: "1/19/2022"
+output: 
+  pdf_document:
+    toc: false
+    number_sections: yes
+header-includes:
+  - \setlength{\parindent}{1em}
+  - \usepackage{float}
+---
+
+``` {r setup, echo = FALSE, message = FALSE, warning = FALSE}
+
+# set default chunk options
+knitr::opts_chunk$set(fig.width = 4, fig.height = 3, 
+                      echo = TRUE, message = FALSE, warning = FALSE)
+
+
+# load packages
+library("stargazer")
+library("here") 
+library("tidyr") 
+library("dplyr")
+library("stringr") 
+library("janitor") 
+library("cowplot")
+library("ggplot2")
+library("tinytex")
+library("datasets")
+library("tibble")
+
+options(scipen = 999)
+```
+
+<!--
+Handy markdown syntax:
+
+\newpage
+\noindent
+
+\begin{align}
+with stuff in between
+\end{align}
+
+still not sure what this does:
+\medskip
+
+-->
+
+## Load data
+
+```{r}
+pm_df <- readxl::read_excel(here("HW1/CES4.xlsx"), sheet = "CES4.0FINAL_results") %>% clean_names()
+```
+
+## Answers
+
+(a) What is the average concentration of PM2.5 across all census tracts in California?
+**`r mean(pm_df$pm2_5)` is the mean PM 2.5 concentration across all California census tracts.**
+
+(b) What county has the highest level of poverty in California?
+`r pm_df$california_county[which.max(pm_df$poverty)]` county has the highest level of poverty in a single census tract.
+```{r}
+county_data <- pm_df %>%  select(california_county, poverty) %>% group_by(california_county) %>% summarise(max_pov = max())
+```
+
+
+(c) Make a histogram depicting the distribution of percent low birth weight and PM2.5.
+```{r}
+
+```
+
+(d) Estimate a OLS regression of LowBirthWeight on PM25. Report the estimated slope coefficient and its heteroskedasticity-robust standard error. Interpret the estimated slope coefficient. Is the effect of PM25 on LowBirthWeight statistically significant at the 5%?
+```{r}
+
+```
+
+(e) Suppose a new air quality policy is expected to reduce PM2.5 concentration by 2 micrograms per cubic meters. Predict the new average value of LowBirthWeight and derive its 95% confidence interval. Interpret the 95% confidence interval.
+```{r}
+
+```
+
+(f) Add the variable Poverty as an explanatory variable to the regression in (d). Interpret the estimated coefficient on Poverty. What happens to the estimated coefficient on PM25, compared to the regression in (d). Explain.
+```{r}
+
+```
+
+(g) From the regression in (f), test the null hypothesis that the effect of PM2.5 is equal to the effect of Poverty.
+```{r}
+
+```
+
