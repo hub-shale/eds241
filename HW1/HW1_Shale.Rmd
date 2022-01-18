@@ -52,7 +52,13 @@ still not sure what this does:
 ## Load data
 
 ```{r}
-pm_df <- readxl::read_excel(here("HW1/CES4.xlsx"), sheet = "CES4.0FINAL_results") %>% clean_names()
+pm_df <- readxl::read_excel(here("HW1/CES4.xlsx"), sheet = "CES4.0FINAL_results") %>% 
+  clean_names() %>% select(census_tract, total_population, california_county, 
+                           low_birth_weight, pm2_5, poverty) %>% 
+  drop_na() %>% 
+  mutate(low_birth_weight = round(as.numeric(low_birth_weight), 2))
+
+pm_df$california_county <- as.factor(pm_df$california_county)
 ```
 
 ## Answers
@@ -61,20 +67,34 @@ pm_df <- readxl::read_excel(here("HW1/CES4.xlsx"), sheet = "CES4.0FINAL_results"
 **`r mean(pm_df$pm2_5)` is the mean PM 2.5 concentration across all California census tracts.**
 
 (b) What county has the highest level of poverty in California?
-`r pm_df$california_county[which.max(pm_df$poverty)]` county has the highest level of poverty in a single census tract.
+**`r pm_df$california_county[which.max(pm_df$poverty)]` county has the highest level of poverty in a single census tract (tract `r pm_df$census_tract[which.max(pm_df$poverty)]`).**
+
 ```{r}
-county_data <- pm_df %>%  select(california_county, poverty) %>% group_by(california_county) %>% summarise(max_pov = max())
+county_data <- pm_df %>%  select(california_county, poverty) %>% group_by(california_county) %>% summarise(across(where(is.numeric), mean))
 ```
 
+**However, `r county_data$california_county[which.max(county_data$poverty)]]` has the highest mean poverty level at `r max(county_data$poverty)`.**
 
 (c) Make a histogram depicting the distribution of percent low birth weight and PM2.5.
 ```{r}
 
+ggplot(pm_df, aes(x=pm2_5)) +
+  geom_histogram()+
+  theme_cowplot(14)+
+  labs(x = "PM 2.5")
+
+ggplot(pm_df, aes(x=low_birth_weight)) +
+  geom_histogram() +
+  theme_cowplot(14) +
+  labs(x = "Percent low birth weight")
 ```
+
+**Note: PM 2.5 is distinctly bimodal.**
 
 (d) Estimate a OLS regression of LowBirthWeight on PM25. Report the estimated slope coefficient and its heteroskedasticity-robust standard error. Interpret the estimated slope coefficient. Is the effect of PM25 on LowBirthWeight statistically significant at the 5%?
 ```{r}
-
+lbw_model = estimatr::lm_robust(data = pm_df, pm2_5 ~ low_birth_weight)
+summary(lbw_model)
 ```
 
 (e) Suppose a new air quality policy is expected to reduce PM2.5 concentration by 2 micrograms per cubic meters. Predict the new average value of LowBirthWeight and derive its 95% confidence interval. Interpret the 95% confidence interval.
