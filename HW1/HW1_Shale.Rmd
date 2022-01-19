@@ -31,7 +31,7 @@ library("tinytex")
 library("datasets")
 library("tibble")
 
-options(scipen = 999)
+options(scipen = 10)
 ```
 
 <!--
@@ -93,22 +93,18 @@ ggplot(pm_df, aes(x=low_birth_weight)) +
 
 (d) Estimate a OLS regression of LowBirthWeight on PM25. Report the estimated slope coefficient and its heteroskedasticity-robust standard error. Interpret the estimated slope coefficient. Is the effect of PM25 on LowBirthWeight statistically significant at the 5%?
 ```{r}
-lbw_model = estimatr::lm_robust(data = pm_df, pm2_5 ~ low_birth_weight)
+lbw_model = estimatr::lm_robust(data = pm_df, low_birth_weight ~ pm2_5)
 summary(lbw_model)
 ```
 
-(e) Suppose a new air quality policy is expected to reduce PM2.5 concentration by 2 micrograms per cubic meters. Predict the new average value of LowBirthWeight and derive its 95% confidence interval. Interpret the 95% confidence interval.
-```{r}
-
-```
+_Part (e) removed from assignment 1_
+<!-- (e) Suppose a new air quality policy is expected to reduce PM2.5 concentration by 2 micrograms per cubic meters. Predict the new average value of LowBirthWeight and derive its 95% confidence interval. Interpret the 95% confidence interval. -->
 
 (f) Add the variable Poverty as an explanatory variable to the regression in (d). Interpret the estimated coefficient on Poverty. What happens to the estimated coefficient on PM25, compared to the regression in (d). Explain.
 ```{r}
-
+bwp_model = estimatr::lm_robust(data = pm_df, low_birth_weight ~ pm2_5 + poverty)
+summary(bwp_model)
 ```
 
 (g) From the regression in (f), test the null hypothesis that the effect of PM2.5 is equal to the effect of Poverty.
-```{r}
-
-```
-
+**Looking at the confidence intervals, it is clear that PM 2.5 has a bigger impact on birth weights than poverty does - we can reject the null hypothesis that their effects are the same at the 95% CI. The lower bound of the PM 2.5 CI is 0.04285, while the upper bound of the poverty CI is 0.02940. This means that even if our point estimates for the model coefficients for PM 2.5 and poverty are not exactly right (specifically, if we overestimated the effect of poverty and underestimated the effect of PM 2.5, which would bring the two estimates closer together), the impact of PM 2.5 will still be greater than the impact of poverty in determining birth weight.**
