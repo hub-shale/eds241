@@ -1,0 +1,96 @@
+---
+title: "HW2_Shale"
+author: "Shale"
+date: "1/30/2022"
+output: 
+  pdf_document:
+    toc: false
+    number_sections: yes
+header-includes:
+  - \setlength{\parindent}{1em}
+  - \usepackage{float}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+
+# load packages
+library("stargazer")
+library("here") 
+library("tidyr") 
+library("dplyr")
+library("readr")
+library("tidyselect")
+library("stringr") 
+library("janitor") 
+library("cowplot")
+library("ggplot2")
+library("tinytex")
+library("datasets")
+library("tibble")
+
+options(scipen = 10)
+```
+
+# Load Data
+
+```{r}
+nox_df <- readxl::read_excel(here("HW2/NBP.xls"))
+```
+
+# Answers
+
+### (a) Make a histogram depicting the distribution of Dnox_masstons.
+
+```{r}
+ggplot(data = nox_df, aes(Dnox_masstons)) +
+  geom_histogram()
+```
+
+### (b) Create an indicator =1 if the county has PctBlack above the sample median, and =0 otherwise (in the rest of the assignment, I refer to this variable as ‘D’). What is the average of PctBlack for counties above the median, i.e. counties for which D=1?
+
+```{r}
+med_b <- median(nox_df$PctBlack)
+
+nox_df <- nox_df %>% mutate(D = as.factor(PctBlack > med_b)) %>% 
+  mutate(D = as.numeric(D) - 1)
+
+high_b_avg <- nox_df %>% filter(D == 1)
+```
+
+**The mean of `PctBlack` for counties above the median is `r mean(high_b_avg$PctBlack)`.**
+
+### (c) Estimate a regression of Dnox_masstons on NBP. Interpret the estimated intercept and the coefficient on NBP.
+
+```{r}
+nbp_nox_m <- estimatr::lm_robust(data = nox_df, Dnox_masstons ~ NBP)
+
+summary(nbp_nox_m)
+```
+
+**The intercept of -3.622 indicates that the mean change in Dnox_masstons (tons of nitrogen oxides) of areas that were not regulated under the NOx Budget Program (i.e. did not receive the treatment) was a decrease of ~3.6 tons between 2000 and 2008. The NBP coefficient of -3.920 indicates that the treatment group, which were regulated under NBP, saw an additional decrease of ~3.9 tons NOx over the same time period.**
+
+### (d) Create an interaction between the variables NBP and D. Estimate a regression of Dnox_masstons on NBP, D, and this interaction. Interpret each estimated regression coefficient, including the intercept.
+
+```{r}
+nbp_d_int <- estimatr::lm_robust(data = nox_df, Dnox_masstons ~ NBP*D)
+summary(nbp_d_int)
+```
+
+-**The intercept of -2.418 indicates that areas that were not regulated under the NOx Budget Program (i.e. did not receive the treatment) and had a lower than average (median) `PctBlack` population, saw a decrease of ~2.4 tons of NOx emissions between 2000 and 2008.** 
+-**The `NBP` coefficient of -7.141 shows that areas with NOx regulation (`NBP`=1) and where `PctBlack` population is below the median (`D`=0) decreased NOx emissions by 7.14 more tons than the intercept.** 
+-**The `D` coefficient of -2.588 shows that areas without NOx regulation (`NBP`=0) and where `PctBlack` population is above the median (`D`=1) decreased NOx emissions by 2.6 more tons than the intercept. ** 
+-**The `NBP:D` coefficient of 6.372 shows that ** 
+
+### (e) What is the predicted Dnox_masstons in a county that was not regulated under NBP and where PctBlack is above the sample median (i.e., where D=1)? Report the 95% confidence interval for this prediction. Make sure to use “heteroskedasticity-robust” standard errors.
+
+```{r}
+df_split <- data.frame(NBP = 0, D = 1)
+
+ci <- predict(object = nbp_d_int, 
+              newdata = df_split, 
+              se.fit=TRUE, 
+              interval = "confidence")
+```
+
+**The predicted change in NOx emissions in a county where `D` = 1 and `NBP` = 0 is -5.01, with a heteroskedasticity-robust SE of 0.7298. This means that the 95% CI is between -6.44 and -3.57 tons.**
