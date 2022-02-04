@@ -1,7 +1,7 @@
 ---
-title: "HW2_Shale"
+title: "Assignment 2"
 author: "Shale"
-date: "1/30/2022"
+date: "2/3/2022"
 output: 
   pdf_document:
     toc: false
@@ -68,7 +68,7 @@ nbp_nox_m <- estimatr::lm_robust(data = nox_df, Dnox_masstons ~ NBP)
 summary(nbp_nox_m)
 ```
 
-**The intercept of -3.622 indicates that the mean change in Dnox_masstons (tons of nitrogen oxides) of areas that were not regulated under the NOx Budget Program (i.e. did not receive the treatment) was a decrease of ~3.6 tons between 2000 and 2008. The NBP coefficient of -3.920 indicates that the treatment group, which were regulated under NBP, saw an additional decrease of ~3.9 tons NOx over the same time period.**
+**The intercept of -3.622 indicates that the mean change in Dnox_masstons (tons of nitrogen oxides) of areas that were not regulated under the NOx Budget Program (i.e. did not receive the treatment) was a decrease of 3.6 tons between 2000 and 2008. The NBP coefficient of -3.920 indicates that the treatment group, which were regulated under NBP, saw an _additional_ decrease of 3.9 tons NOx over the same time period.**
 
 ### (d) Create an interaction between the variables NBP and D. Estimate a regression of Dnox_masstons on NBP, D, and this interaction. Interpret each estimated regression coefficient, including the intercept.
 
@@ -77,10 +77,13 @@ nbp_d_int <- estimatr::lm_robust(data = nox_df, Dnox_masstons ~ NBP*D)
 summary(nbp_d_int)
 ```
 
--**The intercept of -2.418 indicates that areas that were not regulated under the NOx Budget Program (i.e. did not receive the treatment) and had a lower than average (median) `PctBlack` population, saw a decrease of ~2.4 tons of NOx emissions between 2000 and 2008.** 
--**The `NBP` coefficient of -7.141 shows that areas with NOx regulation (`NBP`=1) and where `PctBlack` population is below the median (`D`=0) decreased NOx emissions by 7.14 more tons than the intercept.** 
--**The `D` coefficient of -2.588 shows that areas without NOx regulation (`NBP`=0) and where `PctBlack` population is above the median (`D`=1) decreased NOx emissions by 2.6 more tons than the intercept. ** 
--**The `NBP:D` coefficient of 6.372 shows that ** 
+- **The intercept of -2.418 indicates that areas that were not regulated under the NOx Budget Program (i.e. did not receive the treatment) and had a lower than average (median) `PctBlack` population, saw a decrease of 2.4 tons of NOx emissions between 2000 and 2008.**
+
+- **The `NBP` coefficient of -7.141 shows that areas with NOx regulation (`NBP`=1) and where `PctBlack` population is below the median (`D`=0) decreased NOx emissions by 7.14 more tons than the intercept.**
+
+- **The `D` coefficient of -2.588 shows that areas without NOx regulation (`NBP`=0) and where `PctBlack` population is above the median (`D`=1) decreased NOx emissions by 2.6 more tons than the intercept.**
+
+- **The `NBP:D` coefficient of 6.372 shows that implementing NOx regulation in places where `PctBlack` population is above the median (`D`=1) reduces the decrease in average NOx emissions by 6.3 more tons compared to areas with `D`=0 (places where `PctBlack` is lower than the median). In other words, this coefficient is the difference in NOx regulation effect in high black vs low black areas.**  
 
 ### (e) What is the predicted Dnox_masstons in a county that was not regulated under NBP and where PctBlack is above the sample median (i.e., where D=1)? Report the 95% confidence interval for this prediction. Make sure to use “heteroskedasticity-robust” standard errors.
 
@@ -91,6 +94,7 @@ ci <- predict(object = nbp_d_int,
               newdata = df_split, 
               se.fit=TRUE, 
               interval = "confidence")
+ci
 ```
 
-**The predicted change in NOx emissions in a county where `D` = 1 and `NBP` = 0 is -5.01, with a heteroskedasticity-robust SE of 0.7298. This means that the 95% CI is between -6.44 and -3.57 tons.**
+**The predicted change in NOx emissions in a county where `D` = 1 and `NBP` = 0 is -5.01, with a heteroskedasticity-robust SE of 0.7298. This gives a 95% CI is between -6.44 and -3.57 tons.**
