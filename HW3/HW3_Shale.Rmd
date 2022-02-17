@@ -1,0 +1,87 @@
+---
+title: "EDS241: Assignment template/example"
+author: "Shale Hunter"
+date: '`r format(Sys.time(), "%m/%d/%Y")`'
+output: 
+  pdf_document:
+    toc: false
+    number_sections: yes
+header-includes:
+  - \setlength{\parindent}{1em}
+  - \usepackage{float}
+--- 
+  
+``` {r setup, echo = FALSE, message = FALSE, warning = FALSE}
+
+# set default chunk options
+knitr::opts_chunk$set(fig.width = 4, fig.height = 3, 
+                      echo = TRUE, message = FALSE, warning = FALSE)
+
+
+# load packages
+packages=c("stargazer", "here", "tidyr", "readr", "dplyr","stringr", "janitor", 
+           "cowplot", "ggplot2", "tinytex", "datasets", "tibble")
+
+for (i in packages) {
+  if (require(i,character.only=TRUE)==FALSE) {
+    install.packages(i,repos='http://cran.us.r-project.org')
+  }
+  else {
+    require(i,character.only=TRUE)
+  }
+}
+
+#devtools::install_github('rstudio/rmarkdown')
+options(scipen=10) # not scientific notation
+
+
+```
+
+# Load Data
+
+```{r}
+smoke = read_csv(here("HW3/SMOKING_EDS241.csv"))
+```
+
+
+# Questions
+
+a) What is the unadjusted mean difference in birth weight of infants with smoking and non- smoking mothers? Under what hypothesis does this correspond to the average treatment effect of maternal smoking during pregnancy on infant birth weight? Provide some simple empirical evidence for or against this hypothesis.
+
+**The unadjusted mean difference in birth weight of infants with smoking and non- smoking mothers is `r mean(smoke$birthwgt[smoke$tobacco==1]) - mean(smoke$birthwgt[smoke$tobacco==0])`grams. This corresponds to the ATE under the assumption that mothers are assigned randomly to the smoking/non-smoking group. This is probably not a strong assumption because it is likely that there are external factors that effect a mother's likelihood to smoke during pregnancy, such as (only thinking about other variables in our dataset) whether or not this is the mother's first child (mothers might know less about the harmful effects of smoking when they are on their first child) or mother's education level (women with more education may be less likely to smoke because of a greater awareness of the harmful effects of smoking). Both these effects are shown to be significant in the models below, showing that smoking is not random across these other conditions.**
+
+```{r}
+summary(estimatr::lm_robust(data = smoke, tobacco ~ first))
+
+summary(estimatr::lm_robust(data = smoke, tobacco ~ meduc))
+
+```
+
+
+b) Assume that maternal smoking is randomly assigned conditional on the observable covariates listed above. Estimate the effect of maternal smoking on birth weight using a linear regression. Report the estimated coefficient on tobacco and its standard error.
+
+```{r}
+tbco_lm = summary(estimatr::lm_robust(data = smoke, birthwgt ~ tobacco))
+tbco_lm
+```
+
+**The model above predicts a coefficient of -244.5 (grams) for tobacco, with a standard error of 4.15 grams.**
+
+c) Use the exact matching estimator to estimate the effect of maternal smoking on birth weight. For simplicity, consider the following covariates in your matching estimator: create a 0-1 indicator for mother's age (=1 if mage>=34), and a 0-1 indicator for mother's education (1 if meduc>=16), mother's race (mblack), and alcohol consumption indicator (alcohol). These 4 covariates will create $2*2*2*2 = 16$ cells. Report the estimated average treatment effect of smoking on birthweight using the exact matching estimator and its linear regression analogue (Lecture 6, slides 12-14).
+
+```{r}
+
+```
+
+d) Estimate the propensity score for maternal smoking using a logit estimator and based on the following specification: mother’s age, mother’s age squared, mother’s education, and indicators for mother’s race, and alcohol consumption.
+
+```{r}
+
+```
+
+e) Use the propensity score weighted regression (WLS) to estimate the effect of maternal smoking on birth weight (Lecture 7, slide 12).
+
+```{r}
+
+```
+
