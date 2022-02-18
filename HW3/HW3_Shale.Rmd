@@ -1,5 +1,5 @@
 ---
-title: "EDS241: Assignment template/example"
+title: "EDS241: Assignment 3"
 author: "Shale Hunter"
 date: '`r format(Sys.time(), "%m/%d/%Y")`'
 output: 
@@ -61,11 +61,11 @@ summary(estimatr::lm_robust(data = smoke, tobacco ~ meduc))
 b) Assume that maternal smoking is randomly assigned conditional on the observable covariates listed above. Estimate the effect of maternal smoking on birth weight using a linear regression. Report the estimated coefficient on tobacco and its standard error.
 
 ```{r}
-tbco_lm = summary(estimatr::lm_robust(data = smoke, birthwgt ~ tobacco))
+tbco_lm = summary(estimatr::lm_robust(data = smoke, birthwgt ~ .))
 tbco_lm
 ```
 
-**The model above predicts a coefficient of -244.5 (grams) for tobacco, with a standard error of 4.15 grams.**
+**The model above predicts a coefficient of -228.07 (grams) for tobacco, with a standard error of 4.27 grams.**
 
 c) Use the exact matching estimator to estimate the effect of maternal smoking on birth weight. For simplicity, consider the following covariates in your matching estimator: create a 0-1 indicator for mother's age (=1 if mage>=34), and a 0-1 indicator for mother's education (1 if meduc>=16), mother's race (mblack), and alcohol consumption indicator (alcohol). These 4 covariates will create $2*2*2*2 = 16$ cells. Report the estimated average treatment effect of smoking on birthweight using the exact matching estimator and its linear regression analogue (Lecture 6, slides 12-14).
 
@@ -115,6 +115,11 @@ ATT=sum((treatment_table$w_ATT)*(treatment_table$Y_diff))
 ATT
 ```
 
+
+<!--
+
+Trying to make sense of this stuff but apparently this is out of the scope of this homework?
+
 ```{r}
 coefs = as.matrix(EMcompare$coefficients[,1] + EMcompare$coefficients[1,1])
 lm_coefs = coefs[-1, ]
@@ -139,14 +144,18 @@ coe
 
 
 ```
-**DOES THIS COMPARISON MAKE SENSE???**
+**DOES THIS COMPARISON MAKE SENSE???** 
 
-**The estimated average treatment effect of smoking on birthweight using the exact matching estimator is `r coe[1,2]` grams, while the comparable linear regression gives an average treatment effect of `r coe[1,1]` grams. These values are quite close.**
+-->
+
+**The estimated average treatment effect of smoking on birthweight using the exact matching estimator is `r ATE` grams, while the comparable linear regression gives an average treatment effect of `r coe[1,1]` grams. These values are quite close.**
 
 d) Estimate the propensity score for maternal smoking using a logit estimator and based on the following specification: mother’s age, mother’s age squared, mother’s education, and indicators for mother’s race, and alcohol consumption.
 
 ```{r}
-ps_model = glm(data = smoke, formula = tobacco ~ mage + (mage * mage) + meduc + mblack + alcohol, family = binomial())
+smoke = smoke %>% mutate(mage2 = (mage * mage))
+
+ps_model = glm(data = smoke, formula = tobacco ~ mage + mage2 + meduc + mblack + alcohol, family = binomial())
 propensity = predict(ps_model, type = "response")
 
 ```
@@ -156,7 +165,9 @@ e) Use the propensity score weighted regression (WLS) to estimate the effect of 
 ```{r}
 ps_wt = (smoke$tobacco / propensity) + ((1-smoke$tobacco) / (1-propensity))
 
-wps_model = estimatr::lm_robust(data = smoke, formula = birthwgt ~ tobacco, weights = ps_wt)
-summary(wps_model)
+wps_model = estimatr::lm_robust(data = smoke, birthwgt ~ tobacco + mage + mage2 + meduc + mblack + alcohol, weights = ps_wt)
+
+summary(wps_model)$coefficients[2,1]
 ```
+
 
