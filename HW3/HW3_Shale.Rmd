@@ -70,18 +70,93 @@ tbco_lm
 c) Use the exact matching estimator to estimate the effect of maternal smoking on birth weight. For simplicity, consider the following covariates in your matching estimator: create a 0-1 indicator for mother's age (=1 if mage>=34), and a 0-1 indicator for mother's education (1 if meduc>=16), mother's race (mblack), and alcohol consumption indicator (alcohol). These 4 covariates will create $2*2*2*2 = 16$ cells. Report the estimated average treatment effect of smoking on birthweight using the exact matching estimator and its linear regression analogue (Lecture 6, slides 12-14).
 
 ```{r}
+# dummy variables
+age = as.numeric(as.logical(smoke$mage >= 34))
+edu = as.numeric(as.logical(smoke$meduc >= 16))
+blk = smoke$mblack
+alc = smoke$alcohol
+
+# grouped variable
+grp = paste0(age, edu, blk, alc)
+
+smoke = smoke %>% mutate(grp = grp)
+
+analogue_lm = estimatr::lm_robust(data = smoke, birthwgt ~ tobacco + factor(grp))
+EMcompare = summary(analogue_lm)
+```
+
+### Exact Matching
+
+```{r}
+treatment_table <- smoke %>%
+  group_by(grp,tobacco)%>% 
+  # Calculate number of observations and Y mean by X by treatment cells:
+  summarise(n_obs  = n(),
+            Y_mean = mean(birthwgt, na.rm = T))%>% 
+#old way to pivot_longer: gather(variables, values, n_obs:Y_mean)
+  pivot_longer(names_to = "variables", values_to = "values", n_obs:Y_mean) %>% 
+  # Combine the treatment and variables for re-reshaping
+  mutate(variables = paste0(variables, "_", tobacco))%>% 
+  # Reshape data by treatment and X cell
+  pivot_wider(id_cols = grp, names_from = variables, values_from = values)%>% 
+  ungroup()%>%  #Ungroup from X values
+  mutate(Y_diff = Y_mean_1 - Y_mean_0, #calculate Y_diff
+         w_ATE = (n_obs_0+n_obs_1)/(sum(n_obs_0)+sum(n_obs_1)),
+         w_ATT = n_obs_1/sum(n_obs_1))%>% #calculate weights
+  mutate_if(is.numeric, round, 2) #Round data
+
+
+stargazer(treatment_table, type= "text", summary = FALSE, digits = 2)
+
+# MULTIVARIATE MATCHING ESTIMATES OF ATE AND ATT
+ATE=sum((treatment_table$w_ATE)*(treatment_table$Y_diff))
+ATE
+ATT=sum((treatment_table$w_ATT)*(treatment_table$Y_diff))
+ATT
+```
+
+```{r}
+coefs = as.matrix(EMcompare$coefficients[,1] + EMcompare$coefficients[1,1])
+lm_coefs = coefs[-1, ]
+
+
+# This section made sure that lm() and lm_robust gave the same output:
+
+# logue_lm = lm(data = smoke, birthwgt ~ tobacco + factor(grp))
+# compare = summary(logue_lm)
+# coefs = as.matrix(compare$coefficients[,1] + compare$coefficients[1,1])
+# base2 = coefs[-1, ]
+# verify2 = data_frame(base_coefs, base2)
+
+
+# comparison
+verify_df = data.frame(lm_coefs, treatment_table$Y_mean_1)
+verify_df
+
+
+coe = data_frame(EMcompare$coefficients[-1,1], treatment_table$Y_diff)
+coe
+
 
 ```
+**DOES THIS COMPARISON MAKE SENSE???**
+
+**The estimated average treatment effect of smoking on birthweight using the exact matching estimator is `r coe[1,2]` grams, while the comparable linear regression gives an average treatment effect of `r coe[1,1]` grams. These values are quite close.**
 
 d) Estimate the propensity score for maternal smoking using a logit estimator and based on the following specification: mother’s age, mother’s age squared, mother’s education, and indicators for mother’s race, and alcohol consumption.
 
 ```{r}
+ps_model = glm(data = smoke, formula = tobacco ~ mage + (mage * mage) + meduc + mblack + alcohol, family = binomial())
+propensity = predict(ps_model, type = "response")
 
 ```
 
 e) Use the propensity score weighted regression (WLS) to estimate the effect of maternal smoking on birth weight (Lecture 7, slide 12).
 
 ```{r}
+ps_wt = (smoke$tobacco / propensity) + ((1-smoke$tobacco) / (1-propensity))
 
+wps_model = estimatr::lm_robust(data = smoke, formula = birthwgt ~ tobacco, weights = ps_wt)
+summary(wps_model)
 ```
 
