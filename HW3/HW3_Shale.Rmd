@@ -148,7 +148,7 @@ coe
 
 -->
 
-**The estimated average treatment effect of smoking on birthweight using the exact matching estimator is `r ATE` grams, while the comparable linear regression gives an average treatment effect of `r coe[1,1]` grams. These values are quite close.**
+**The estimated average treatment effect of smoking on birthweight using the exact matching estimator is `r ATE` grams, while the comparable linear regression gives an average treatment effect of `r coe[1,1]` grams. These values are quite close, but not the same.**
 
 d) Estimate the propensity score for maternal smoking using a logit estimator and based on the following specification: mother’s age, mother’s age squared, mother’s education, and indicators for mother’s race, and alcohol consumption.
 
