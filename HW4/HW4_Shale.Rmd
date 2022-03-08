@@ -15,7 +15,7 @@ header-includes:
 
 # set default chunk options
 knitr::opts_chunk$set(fig.width = 4, fig.height = 3, 
-                      echo = TRUE, message = FALSE, warning = FALSE)
+                      echo = TRUE, message = FALSE, warning = FALSE, results = FALSE)
 
 
 # load packages
@@ -51,7 +51,7 @@ df = df %>%
 ```{r}
 m1 = estimatr::lm_robust(data = df, log_price ~ log_volume)
 summary(m1)
-car::linearHypothesis(m1, "log_volume=-1")
+car::linearHypothesis(m1, "log_volume=-1", white.adjust = "hc2")
 ```
 
 **The model above gives a price elasticity of -0.06, which a linear hypothesis test shows rejects the null hypothesis of a price elasticity of -1 at p < 0.0001.**
@@ -61,6 +61,9 @@ car::linearHypothesis(m1, "log_volume=-1")
 ```{r}
 mw = estimatr::lm_robust(data = df, log_price ~ wind_m_s)
 summary(mw)
+
+# F-statistic calculated with linearHypothesis() is the same as with lm_robust() above
+# summary(car::linearHypothesis(mw, "wind_m_s=0", white.adjust = "hc2"))
 ```
 
 **The `wind_m_s` coefficient of 0.67 means that a 1 m/s increase in wind speed should correspond to a 0.067 euro/kg increase in price (both values logged). It makes sense that this relationship is positive because higher winds means it is harder/more dangerous to catch fish (and supply may therefore go down), so cost should increase if demand is unaffected. With an F-statistic of 144.7, wind speed is a non-weak relevant instrument.**
@@ -73,7 +76,7 @@ tsls = AER::ivreg(data = df, log_price ~ log_volume | wind_m_s)
 summary(tsls)
 ```
 
-**The estimated price elasticity of demand for sardines is -0.92.**
+**The estimated price elasticity of demand for sardines with wind speed as an instrument for price is -0.92.**
 
 ### (d) Repeat the exercise in (c), but include fixed effects for each year, month, and country. [Hint: you can use the command “as.factor(country) + as.factor(year) +as.factor(month)” to the ivreg function in R]. Report the estimated price elasticity of demand and the F-statistic testing for relevant and non-weak instruments.
 
@@ -81,7 +84,12 @@ summary(tsls)
 tslsf = AER::ivreg(data = df, log_price ~ log_volume | wind_m_s + as.factor(country) + as.factor(year) + as.factor(month))
 
 summary(tslsf)
+
+# F statistic
+fixedef <- lm(data = df, log_price ~ wind_m_s + as.factor(country) + as.factor(year) + as.factor(month))
+
+car::linearHypothesis(fixedef, "wind_m_s=0", white.adjust = "hc2")
 ```
 
-**Controling for fixed effects of country, year, and month, the new price elasticity of demand is 0.0226. The F-statistic of **
+**Controlling for fixed effects of country, year, and month, the new price elasticity of demand is 0.0226, substantially lower than without the fixed effects. The F-statistic of 77.7 shows it is a relevant non-weak instrument.**
 
