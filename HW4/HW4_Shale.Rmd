@@ -1,0 +1,75 @@
+---
+title: "EDS241: Assignment 4"
+author: "Shale Hunter"
+date: '`r format(Sys.time(), "%m/%d/%Y")`'
+output: 
+  pdf_document:
+    toc: false
+    number_sections: yes
+header-includes:
+  - \setlength{\parindent}{1em}
+  - \usepackage{float}
+--- 
+  
+``` {r setup, echo = FALSE, message = FALSE, warning = FALSE}
+
+# set default chunk options
+knitr::opts_chunk$set(fig.width = 4, fig.height = 3, 
+                      echo = TRUE, message = FALSE, warning = FALSE)
+
+
+# load packages
+packages=c("stargazer", "here", "tidyr", "dplyr","stringr", "janitor", 
+           "cowplot", "ggplot2", "tinytex", "datasets", "tibble", "readr")
+
+for (i in packages) {
+    require(i,character.only=TRUE)
+  }
+
+
+options(scipen=10) 
+
+
+```
+
+## Import & Clean Data
+
+```{r}
+df = read_csv("EU_sardines.csv")
+```
+
+```{r}
+df = df %>% 
+  mutate(log_price = log(price_euro_kg),
+         log_volume = log(volume_sold_kg))
+```
+
+# Questions
+
+### (a) Estimate a bivariate regression of log(volume_sold_kg) on log(price euro_kg). What is the price elasticity of demand for sardines? Test the null hypothesis that the price elasticity is equal to -1.
+
+```{r}
+
+```
+
+
+### (b) Like in Lecture 8 (see the IV.R script), we will use wind_m_s as an instrument for log(price_euro_kg). To begin, estimate the first-stage regression relating log(price_euro_kg) to wind_m_s. Interpret the estimated coefficient on wind speed. Does it have the expected sign? Also test for the relevance of the instrument and whether it is a “weak” instrument by reporting the proper F-statistic.
+
+```{r}
+
+```
+
+
+### (c) Estimate the TSLS estimator of the price elasticity of demand for sardines using wind_m_s as an instrument for log(price_euro_kg). What is the estimated price elasticity of demand for sardines?
+
+```{r}
+
+```
+
+
+### (d) Repeat the exercise in (c), but include fixed effects for each year, month, and country. [Hint: you can use the command “as.factor(country) + as.factor(year) +as.factor(month)” to the ivreg function in R]. Report the estimated price elasticity of demand and the F-statistic testing for relevant and non-weak instruments.
+
+```{r}
+
+```
+
