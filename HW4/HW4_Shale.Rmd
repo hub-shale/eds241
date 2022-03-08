@@ -49,27 +49,39 @@ df = df %>%
 ### (a) Estimate a bivariate regression of log(volume_sold_kg) on log(price euro_kg). What is the price elasticity of demand for sardines? Test the null hypothesis that the price elasticity is equal to -1.
 
 ```{r}
-
+m1 = estimatr::lm_robust(data = df, log_price ~ log_volume)
+summary(m1)
+car::linearHypothesis(m1, "log_volume=-1")
 ```
 
+**The model above gives a price elasticity of -0.06, which a linear hypothesis test shows rejects the null hypothesis of a price elasticity of -1 at p < 0.0001.**
 
 ### (b) Like in Lecture 8 (see the IV.R script), we will use wind_m_s as an instrument for log(price_euro_kg). To begin, estimate the first-stage regression relating log(price_euro_kg) to wind_m_s. Interpret the estimated coefficient on wind speed. Does it have the expected sign? Also test for the relevance of the instrument and whether it is a “weak” instrument by reporting the proper F-statistic.
 
 ```{r}
-
+mw = estimatr::lm_robust(data = df, log_price ~ wind_m_s)
+summary(mw)
 ```
 
+**The `wind_m_s` coefficient of 0.67 means that a 1 m/s increase in wind speed should correspond to a 0.067 euro/kg increase in price (both values logged). It makes sense that this relationship is positive because higher winds means it is harder/more dangerous to catch fish (and supply may therefore go down), so cost should increase if demand is unaffected. With an F-statistic of 144.7, wind speed is a non-weak relevant instrument.**
 
 ### (c) Estimate the TSLS estimator of the price elasticity of demand for sardines using wind_m_s as an instrument for log(price_euro_kg). What is the estimated price elasticity of demand for sardines?
 
 ```{r}
+tsls = AER::ivreg(data = df, log_price ~ log_volume | wind_m_s)
 
+summary(tsls)
 ```
 
+**The estimated price elasticity of demand for sardines is -0.92.**
 
 ### (d) Repeat the exercise in (c), but include fixed effects for each year, month, and country. [Hint: you can use the command “as.factor(country) + as.factor(year) +as.factor(month)” to the ivreg function in R]. Report the estimated price elasticity of demand and the F-statistic testing for relevant and non-weak instruments.
 
 ```{r}
+tslsf = AER::ivreg(data = df, log_price ~ log_volume | wind_m_s + as.factor(country) + as.factor(year) + as.factor(month))
 
+summary(tslsf)
 ```
+
+**Controling for fixed effects of country, year, and month, the new price elasticity of demand is 0.0226. The F-statistic of **
 
