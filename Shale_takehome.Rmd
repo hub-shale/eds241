@@ -60,23 +60,42 @@ ols2
 
 ### (c) Based on the observed differences in (b), explain why the estimate in (a) is likely to be biased downward (i.e., overstate the negative effect of the incinerator on housing values).
 
-**Because the characteristics that created a housing value difference in 1978 are still present in 1981, the estimate from (a) is biased downward. In other words, not all of the $30,000 difference can be reasonably attributed to the presence of the incinerator, because without the incinerator there was already a $18,000 difference. But the OLS from (a) cannot separate the effect of the incinerator and the static location effect that was present before the effect: so the effect of the incinerator is added on to the $18,000 to make it look like $30,000.**
+**Because the characteristics that created a housing value difference in 1978 are still present in 1981, the estimate from (a) is biased downward. In other words, not all of the $30,000 difference can be reasonably attributed to the presence of the incinerator, because without the incinerator there was already a $18,000 difference. But the OLS from (a) cannot separate the effect of the incinerator and the static location effect that was present before the effect (under the parallel trends assumption): so the effect of the incinerator is added on to the $18,000 to make it look like $30,000.**
 
 ### (d) Use a difference-in-differences (DD) estimator to estimate the causal effect of the incinerator on housing values without controlling for house and lot characteristics. Interpret the magnitude and sign of the estimated DD coefficient.
 
 ```{r}
-
+DDmodel = plm::plm(data = data, formula = rprice ~ nearinc,
+                  index = c("year"), effect = "twoways", model = "within")
+DDmodel
 ```
 
-**The**
+```{r}
+# DD REGRESSION using lm package
+DD_1 <- lm(formula = rprice ~ nearinc + as.factor(year), data=data)
+se_DD_cap1 <- starprep(DD_1, stat = c("std.error"), se_type = "HC2", alpha = 0.05) 
+
+DD_2 <- lm(formula = rprice ~ nearinc + as.factor(year), data=data)
+se_DD_cap2 <- starprep(DD_2, stat = c("std.error"), se_type = "CR2", clusters=RPS$state_name, alpha = 0.05) 
+
+se_models <- list(se_DD_1[[1]], se_DD_2[[1]])
+stargazer(DD_1, DD_2, se = se_models, keep=c("nearinc"), type="text")
+```
+
+**The difference-in-differences model predicts a coefficient of -25,052 for `nearinc`. This corresponds to about a $25,000 lower price for houses near the incinerator in 1981 compared to  what those same houses _would_ have been worth in 1981 without the incinerator (thus, it is the causal effect of the incinerator, not biased by the systemic differences in housing values seen in 1978). This is done using the parallel trends assumption.**
 
 ### (e) Report the 95% confidence interval for the estimate of the causal effect on the incinerator in (d).
 
 ```{r}
+DDse = lmtest::coeftest(DDmodel, vcov = sandwich::vcovHC(DDmodel, type = "HC2"))[, "Std. Error"]
 
+DDCI = list()
+
+DDCI[1] = -25052 - (DDse * 1.96)
+DDCI[2] = -25052 + (DDse * 1.96)
 ```
 
-**The**
+**The 95% CI for the estimate in (d) is .**
 
 ### (f) How does your answer in (d) changes when you control for house and lot characteristics? Test the hypothesis that the coefficients on the house and lot characteristics are all jointly equal to 0.
 
@@ -96,4 +115,4 @@ ols2
 
 ### (h) Explain (in words) what is the key assumption underlying the causal interpretation of the DD estimator in the context of the incinerator construction in North Andover.
 
-**The**
+**The key assumption here is the parallel trends assumption. That is, the calculation of the "base" rate of house price change between 1978-1981 for houses near the incinerator (i.e. what their prices would have been if the incinerator hadn't been built) is assumed to be the same as the rate for the non-treatment houses (in this case the houses farther away from the incinerator).**
