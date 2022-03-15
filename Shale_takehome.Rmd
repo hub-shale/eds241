@@ -39,20 +39,28 @@ data = read_csv(here("KM_EDS241.csv"))
 ### (a) Using the data for 1981, estimate a simple OLS regression of real house values on the indicator for being located near the incinerator in 1981. What is the house value “penalty” for houses located near the incinerator? Does this estimated coefficient correspond to the ‘causal’ effect of the incinerator (and the negative amenities that come with it) on housing values? Explain why or why not.
 
 ```{r}
+da81 = data %>% filter(year == 1981)
 
+ols1 = estimatr::lm_robust(data = da81, formula = rprice ~ nearinc)
+ols1
 ```
+
+**A simple OLS shows that the penalty for being near the incinerator in 1981 is about $30,688 (the mean house price near the incinerator is $30,688 less than the mean for houses farther away). However, this is not representative of the causal effect of adding the incinerator: the incinerator probably wouldn't have been placed in a place with expensive houses to begin with (NIMBY, city planners listening to rich people more than poor neighborhoods, etc).**
 
 ### (b) Using the data for 1978, provide some evidence the location choice of the incinerator was not “random”, but rather selected on the basis of house values and characteristics. [Hint: in the 1978 sample, are house values and characteristics balanced by nearinc status?]
 
 ```{r}
+da78 = data %>% filter(year == 1978)
 
+ols2 = estimatr::lm_robust(data = da78, formula = rprice ~ nearinc)
+ols2
 ```
+
+**The above OLS regression for house prices in 1978 for the same area shows that houses near the future incinerator location are already on average worth $18,824 less than houses farther away. This supports the theory that the location for the incinerator was not random and was selected to be in a less wealthy area to begin with.**
 
 ### (c) Based on the observed differences in (b), explain why the estimate in (a) is likely to be biased downward (i.e., overstate the negative effect of the incinerator on housing values).
 
-```{r}
-
-```
+**Because the characteristics that created a housing value difference in 1978 are still present in 1981, the estimate from (a) is biased downward. In other words, not all of the $30,000 difference can be reasonably attributed to the presence of the incinerator, because without the incinerator there was already a $18,000 difference. But the OLS from (a) cannot separate the effect of the incinerator and the static location effect that was present before the effect: so the effect of the incinerator is added on to the $18,000 to make it look like $30,000.**
 
 ### (d) Use a difference-in-differences (DD) estimator to estimate the causal effect of the incinerator on housing values without controlling for house and lot characteristics. Interpret the magnitude and sign of the estimated DD coefficient.
 
@@ -60,11 +68,15 @@ data = read_csv(here("KM_EDS241.csv"))
 
 ```
 
+**The**
+
 ### (e) Report the 95% confidence interval for the estimate of the causal effect on the incinerator in (d).
 
 ```{r}
 
 ```
+
+**The**
 
 ### (f) How does your answer in (d) changes when you control for house and lot characteristics? Test the hypothesis that the coefficients on the house and lot characteristics are all jointly equal to 0.
 
@@ -72,15 +84,16 @@ data = read_csv(here("KM_EDS241.csv"))
 
 ```
 
+**The**
+
 ### (g) Using the results from the DD regression in (f), calculate by how much did real housing values change on average between 1978 and 1981.
 
 ```{r}
 
 ```
 
+**The**
+
 ### (h) Explain (in words) what is the key assumption underlying the causal interpretation of the DD estimator in the context of the incinerator construction in North Andover.
 
-```{r}
-
-```
-
+**The**
