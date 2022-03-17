@@ -71,36 +71,38 @@ DDmodel
 ```
 
 ```{r}
+data = data %>% mutate(year = as.factor(year))
+
 # DD REGRESSION using lm package
-DD_1 <- lm(formula = rprice ~ nearinc + as.factor(year), data=data)
-se_DD_cap1 <- starprep(DD_1, stat = c("std.error"), se_type = "HC2", alpha = 0.05) 
-
-DD_2 <- lm(formula = rprice ~ nearinc + as.factor(year), data=data)
-se_DD_cap2 <- starprep(DD_2, stat = c("std.error"), se_type = "CR2", clusters=RPS$state_name, alpha = 0.05) 
-
-se_models <- list(se_DD_1[[1]], se_DD_2[[1]])
-stargazer(DD_1, DD_2, se = se_models, keep=c("nearinc"), type="text")
+DD_1 <- lm(formula = rprice ~ nearinc*year, data=data)
+ 
+summary(DD_1)
 ```
 
-**The difference-in-differences model predicts a coefficient of -25,052 for `nearinc`. This corresponds to about a $25,000 lower price for houses near the incinerator in 1981 compared to  what those same houses _would_ have been worth in 1981 without the incinerator (thus, it is the causal effect of the incinerator, not biased by the systemic differences in housing values seen in 1978). This is done using the parallel trends assumption.**
+**The difference-in-differences model using `lm()` predicts a coefficient of -11,864 for the interaction between `nearinc` and `year`. This corresponds to a $11,864 lower price for houses near the incinerator in 1981 compared to  what those same houses _would_ have been worth in 1981 without the incinerator (thus, it is the causal effect of the incinerator, not biased by the systemic differences in housing values seen in 1978). This is done using the parallel trends assumption.**
 
 ### (e) Report the 95% confidence interval for the estimate of the causal effect on the incinerator in (d).
 
 ```{r}
-DDse = lmtest::coeftest(DDmodel, vcov = sandwich::vcovHC(DDmodel, type = "HC2"))[, "Std. Error"]
+ci_DD <- starprep(DD_1, stat = c("ci"), se_type = "HC2", alpha = 0.05)
 
-DDCI = list()
-
-DDCI[1] = -25052 - (DDse * 1.96)
-DDCI[2] = -25052 + (DDse * 1.96)
+ci_DD
 ```
 
-**The 95% CI for the estimate in (d) is .**
+```{r}
+# PredPrice=data.frame(nox=c(5), rooms=c(6))
+# predict(model2, newdata=PredPrice, se.fit=TRUE, interval='confidence')
+```
+
+**The 95% CI for the estimate in (d) is between `r ci_DD[4,1]` and `r ci_DD[4,2]`. Because this range includes 0 (and because of the p-value of 0.11 in part (d)) this is not statistically significant at the 0.05 level.**
 
 ### (f) How does your answer in (d) changes when you control for house and lot characteristics? Test the hypothesis that the coefficients on the house and lot characteristics are all jointly equal to 0.
 
 ```{r}
+DD_1 <- lm(formula = rprice ~ nearinc*year + + + , data=data)
 
+
+# linearHypothesis(model1,c("nox=0"), white.adjust = "hc2")
 ```
 
 **The**
