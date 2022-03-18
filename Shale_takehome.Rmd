@@ -65,9 +65,10 @@ ols2
 ### (d) Use a difference-in-differences (DD) estimator to estimate the causal effect of the incinerator on housing values without controlling for house and lot characteristics. Interpret the magnitude and sign of the estimated DD coefficient.
 
 ```{r}
-DDmodel = plm::plm(data = data, formula = rprice ~ nearinc,
-                  index = c("year"), effect = "twoways", model = "within")
-DDmodel
+# Using plm():
+# DDmodel = plm::plm(data = data, formula = rprice ~ nearinc,
+#                   index = c("year"), effect = "twoways", model = "within")
+# DDmodel
 ```
 
 ```{r}
@@ -99,6 +100,7 @@ DD_1 <- estimatr::lm_robust(formula = rprice ~ nearinc*year, data=data)
 summary(DD_1)
 ```
 
+
 **The difference-in-differences model using `lm()` predicts a coefficient of -11,864 for the interaction between `nearinc` and `year`. This corresponds to a $11,864 lower price for houses near the incinerator in 1981 compared to  what those same houses _would_ have been worth in 1981 without the incinerator (thus, it is the causal effect of the incinerator, not biased by the systemic differences in housing values seen in 1978). This is done using the parallel trends assumption.**
 
 ### (e) Report the 95% confidence interval for the estimate of the causal effect on the incinerator in (d).
@@ -107,7 +109,7 @@ summary(DD_1)
 summary(DD_1)
 ```
 
-**The 95% CI for the estimate in (d) is between -28914 and 5186. Because this range includes 0 (and because of the p-value of 0.17 in part (d)) this is not statistically significant at the 0.05 level.**
+**The 95% CI for the estimate in (d) is between -28914 and 5186. Because this range includes 0 (and because of the p-value of 0.17) this is not statistically significant at the 0.05 level.**
 
 ### (f) How does your answer in (d) changes when you control for house and lot characteristics? Test the hypothesis that the coefficients on the house and lot characteristics are all jointly equal to 0.
 
@@ -122,18 +124,18 @@ car::linearHypothesis(DD_full,c("age+rooms+area+land=0"), white.adjust = "hc2")
 ```
 
 **When controlling for house and lot characteristics (`age`, `rooms`, `area`, `land`) the effect of the incinerator+year interaction is stronger as seen in a reduced p-value from 0.17 in the model in (d) to 0.0505 here (this is or is not significant at the 0.05 level depending on rounding). The house and lot characteristics are jointly significant (p < 0.0001) and not equal to 0.**
+**NOTE: heteroskedasticity appears to be present in this dataset. The p-value for the interaction is calculated using the heteroskedasticity-robust `lm_robust()` function. If the regular `lm()` function is used, the p-value goes down to 0.011. The same is true in (e), where the reported heteroskedasticity-robust p-value of 0.17 is different than the p-value returned by `lm()`, which is 0.11.**
+
+```{r}
+# using lm() (not heteroskedasticity-robust)
+DD_lm <- lm(formula = rprice ~ nearinc*year + age + rooms + area + land,
+                               data=data)
+summary(DD_lm)
+```
 
 ### (g) Using the results from the DD regression in (f), calculate by how much did real housing values change on average between 1978 and 1981 [for the control group].
 
-```{r}
-# b_age = dds[["coefficients"]][4]
-# b_rooms = dds[["coefficients"]][5]
-# b_area = dds[["coefficients"]][6]
-# b_land = dds[["coefficients"]][7]
-# b_intercept = dds[["coefficients"]][1]
-```
-
-**The coefficient for the `year1981` term in the model in (f) shows the average increase in housing values for the control group (houses not near the incinerator) when controlling for house age, rooms, area, and land. On average, these houses increased in value by $13,094.**
+**The coefficient for the `year1981` term in the model in (f) shows the average increase in housing values for the control group (houses not near the incinerator) between 1978 and 1981 when controlling for house age, rooms, area, and land. On average, these houses increased in value by $13,094.**
 
 ### (h) Explain (in words) what is the key assumption underlying the causal interpretation of the DD estimator in the context of the incinerator construction in North Andover.
 
