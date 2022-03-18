@@ -1,7 +1,7 @@
 ---
 title: "241 Take Home Final"
 author: "Shale"
-date: "3/13/2022"
+date: "3/18/2022"
 output: pdf_document
 ---
 
@@ -9,7 +9,7 @@ output: pdf_document
 
 # set default chunk options
 knitr::opts_chunk$set(fig.width = 4, fig.height = 3, 
-                      echo = TRUE, message = FALSE, warning = FALSE, results = FALSE)
+                      echo = TRUE, message = FALSE, warning = FALSE)
 
 
 # load packages
@@ -71,10 +71,30 @@ DDmodel
 ```
 
 ```{r}
+# manual test
+
+# time, treatment
+m11 = data %>% filter(year == 1981 & nearinc == 1)
+after_inc_m = mean(m11$rprice)
+m10 = data %>% filter(year == 1981 & nearinc == 0)
+after_far_m = mean(m10$rprice)
+m01 = data %>% filter(year == 1978 & nearinc == 1)
+before_inc_m = mean(m01$rprice)
+m00 = data %>% filter(year == 1978 & nearinc == 0)
+before_far_m = mean(m00$rprice)
+
+D_control = after_far_m - before_far_m
+D_inc = after_inc_m - before_inc_m
+DD = D_inc - D_control
+DD
+```
+
+
+```{r}
 data = data %>% mutate(year = as.factor(year))
 
 # DD REGRESSION using lm package
-DD_1 <- lm(formula = rprice ~ nearinc*year, data=data)
+DD_1 <- estimatr::lm_robust(formula = rprice ~ nearinc*year, data=data)
  
 summary(DD_1)
 ```
@@ -84,36 +104,36 @@ summary(DD_1)
 ### (e) Report the 95% confidence interval for the estimate of the causal effect on the incinerator in (d).
 
 ```{r}
-ci_DD <- starprep(DD_1, stat = c("ci"), se_type = "HC2", alpha = 0.05)
-
-ci_DD
+summary(DD_1)
 ```
 
-```{r}
-# PredPrice=data.frame(nox=c(5), rooms=c(6))
-# predict(model2, newdata=PredPrice, se.fit=TRUE, interval='confidence')
-```
-
-**The 95% CI for the estimate in (d) is between `r ci_DD[4,1]` and `r ci_DD[4,2]`. Because this range includes 0 (and because of the p-value of 0.11 in part (d)) this is not statistically significant at the 0.05 level.**
+**The 95% CI for the estimate in (d) is between -28914 and 5186. Because this range includes 0 (and because of the p-value of 0.17 in part (d)) this is not statistically significant at the 0.05 level.**
 
 ### (f) How does your answer in (d) changes when you control for house and lot characteristics? Test the hypothesis that the coefficients on the house and lot characteristics are all jointly equal to 0.
 
 ```{r}
-DD_1 <- lm(formula = rprice ~ nearinc*year + + + , data=data)
+DD_full <- estimatr::lm_robust(formula = rprice ~ nearinc*year + age + rooms + area + land,
+                               data=data)
 
+dds = summary(DD_full)
+dds
 
-# linearHypothesis(model1,c("nox=0"), white.adjust = "hc2")
+car::linearHypothesis(DD_full,c("age+rooms+area+land=0"), white.adjust = "hc2")
 ```
 
-**The**
+**When controlling for house and lot characteristics (`age`, `rooms`, `area`, `land`) the effect of the incinerator+year interaction is stronger as seen in a reduced p-value from 0.17 in the model in (d) to 0.0505 here (this is or is not significant at the 0.05 level depending on rounding). The house and lot characteristics are jointly significant (p < 0.0001) and not equal to 0.**
 
-### (g) Using the results from the DD regression in (f), calculate by how much did real housing values change on average between 1978 and 1981.
+### (g) Using the results from the DD regression in (f), calculate by how much did real housing values change on average between 1978 and 1981 [for the control group].
 
 ```{r}
-
+# b_age = dds[["coefficients"]][4]
+# b_rooms = dds[["coefficients"]][5]
+# b_area = dds[["coefficients"]][6]
+# b_land = dds[["coefficients"]][7]
+# b_intercept = dds[["coefficients"]][1]
 ```
 
-**The**
+**The coefficient for the `year1981` term in the model in (f) shows the average increase in housing values for the control group (houses not near the incinerator) when controlling for house age, rooms, area, and land. On average, these houses increased in value by $13,094.**
 
 ### (h) Explain (in words) what is the key assumption underlying the causal interpretation of the DD estimator in the context of the incinerator construction in North Andover.
 
